@@ -1,0 +1,41 @@
+# packer
+variables.json
+
+# terraform
+*.tfstate
+*.tfstate.*.backup
+*.tfstate.backup
+*.tfvars
+.terraform/
+tf.log
+
+# default ssh key
+id_rsa
+appuser
+webprogrammer
+
+# ansible
+vault.key
+*.retry
+gce.ini
+infra*.json
+
+# Vagrant & molecule
+.vagrant/
+*.log
+*.pyc
+.molecule
+.cache
+.pytest_cache
+
+# docker compose
+.env
+
+# other
+.vscode/
+create_docker_host.sh
+.make_vars
+
+# k8s
+requirements.lock
+kubernetes/charts/**/charts

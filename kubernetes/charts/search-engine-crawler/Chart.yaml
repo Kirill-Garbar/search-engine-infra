@@ -1,0 +1,8 @@
+---
+name: search-engine-crawler
+version: 1.0.0
+description: OTUS search-engine application CRAWLER
+maintainers:
+  - name: Kirill Garbar
+    email: kirill@garbar.pro
+appVersion: 1.0

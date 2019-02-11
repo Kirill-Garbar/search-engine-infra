@@ -1,0 +1,8 @@
+---
+name: search-engine
+version: 0.1.0
+description: OTUS search-engine application
+maintainers:
+  - name: Kirill Garbar
+    email: kirill@garbar.pro
+appVersion: 1.0

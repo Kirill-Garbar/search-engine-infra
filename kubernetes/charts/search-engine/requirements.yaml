@@ -1,0 +1,13 @@
+dependencies:
+  - name: search-engine-ui
+    version: "1.0.0"
+    repository: "file://../search-engine-ui"
+  - name: search-engine-crawler
+    version: "1.0.0"
+    repository: "file://../search-engine-crawler"
+  - name: rabbitmq
+    version: "4.1.1"
+    repository: https://kubernetes-charts.storage.googleapis.com
+  - name: mongodb
+    version: "5.3.2"
+    repository: https://kubernetes-charts.storage.googleapis.com
