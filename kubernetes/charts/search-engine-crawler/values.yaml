@@ -5,7 +5,7 @@ service:
 
 image:
   repository: kirillgarbar
-  name: search_engine_crawler
+  name: search-engine-crawler
   tag: latest
 
 excluded_urls: .*github.com

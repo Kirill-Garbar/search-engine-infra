@@ -38,4 +38,4 @@ create_docker_host.sh
 
 # k8s
 requirements.lock
-kubernetes/charts/**/charts
+kubernetes/charts/**/charts/*.tgz

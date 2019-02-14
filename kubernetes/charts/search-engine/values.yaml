@@ -5,8 +5,8 @@ search-engine-crawler:
 
   image:
     repository: kirillgarbar
-    name: search_engine_crawler
-    tag: latest
+    name: search-engine-crawler
+    tag: master
 
   excluded_urls: .*github.com
   databaseHost:
@@ -19,8 +19,8 @@ search-engine-ui:
 
   image:
     repository: kirillgarbar
-    name: search_engine_ui
-    tag: latest
+    name: search-engine-ui
+    tag: master
 
   databaseHost:
 
