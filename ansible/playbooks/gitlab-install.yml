@@ -1,7 +1,9 @@
 ---
 - name: Install gitlab
   hosts: tag_gitlab-server
+  tags:
+    - gitlab-install
   become: true
 
   roles:
-    - role: geerlingguy.gitlab
+    - role: gitlab-omnibus

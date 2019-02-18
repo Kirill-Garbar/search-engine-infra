@@ -72,20 +72,20 @@ chownDataImage:
 ## ref: http://kubernetes.io/docs/user-guide/services/
 ##
 service:
-  type: ClusterIP
+  type: NodePort
   port: 80
   annotations: {}
   labels: {}
 
 ingress:
-  enabled: false
+  enabled: true
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   labels: {}
   path: /
   hosts:
-    - chart-example.local
+    - grafana.otus.garbar.pro
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -130,7 +130,7 @@ persistence:
 
 # Administrator credentials when not using an existing secret (see below)
 adminUser: admin
-# adminPassword: strongpassword
+# adminPassword: admin
 
 # Use an existing secret for the admin user.
 admin:
@@ -168,40 +168,40 @@ extraVolumeMounts: []
 
 ## Pass the plugins you want installed as a list.
 ##
-plugins: []
-  # - digrich-bubblechart-panel
+plugins:
+  # - grafana-kubernetes-app
   # - grafana-clock-panel
 
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources
 ##
-datasources: {}
-#  datasources.yaml:
-#    apiVersion: 1
-#    datasources:
-#    - name: Prometheus
-#      type: prometheus
-#      url: http://prometheus-prometheus-server
-#      access: proxy
-#      isDefault: true
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus server
+      type: prometheus
+      url: http://prometheus-server
+      access: proxy
+      isDefault: true
 
 ## Configure grafana dashboard providers
 ## ref: http://docs.grafana.org/administration/provisioning/#dashboards
 ##
 ## `path` must be /var/lib/grafana/dashboards/<provider_name>
 ##
-dashboardProviders: {}
-#  dashboardproviders.yaml:
-#    apiVersion: 1
-#    providers:
-#    - name: 'default'
-#      orgId: 1
-#      folder: ''
-#      type: file
-#      disableDeletion: false
-#      editable: true
-#      options:
-#        path: /var/lib/grafana/dashboards/default
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
 
 ## Configure grafana dashboard to import
 ## NOTE: To use dashboards you must also enable/configure dashboardProviders
@@ -209,19 +209,25 @@ dashboardProviders: {}
 ##
 ## dashboards per provider, use provider name as key.
 ##
-dashboards: {}
-#  default:
-#    some-dashboard:
-#      json: dashboards/custom-dashboard.json
-#    prometheus-stats:
-#      gnetId: 2
-#      revision: 2
-#      datasource: Prometheus
-#    local-dashboard:
-#      url: https://example.com/repository/test.json
-#    local-dashboard-base64:
-#      url: https://example.com/repository/test-b64.json
-#      b64content: true
+dashboards:
+  default:
+    kubernetes-dashboard:
+      json: dashboards/Kubernetes_cluster_monitoring_(via Prometheus).json
+    app-dashboard:
+      json: dashboards/Application_dashboard.json
+    mongo-dashboard:
+      json: dashboards/MongoDB_dashboard.json
+    rabbitmq-dashboard:
+      json: dashboards/RabbitMQ_Monitoring_dashboard.json
+    k8s-dashboard:
+      json: dashboards/Kubernetes_Deployment_metrics.json
+    prometheus-stats:
+      datasource: Prometheus server
+  #  local-dashboard:
+  #    url: https://example.com/repository/test.json
+  #  local-dashboard-base64:
+  #    url: https://example.com/repository/test-b64.json
+  #    b64content: 
 
 ## Reference to external ConfigMap per provider. Use provider name as key and ConfiMap name as value.
 ## A provider dashboards must be defined either by external ConfigMaps or in values.yaml, not in both.

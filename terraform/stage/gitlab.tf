@@ -32,7 +32,7 @@ resource "google_compute_instance" "gitlab" {
 
 
 
-resource "google_dns_record_set" "search_engine_zone" {
+resource "google_dns_record_set" "gitlab_name" {
   name         = "gitlab.${var.search_engine_dns_zone}."
   managed_zone = "${replace(var.search_engine_dns_zone,".", "-")}"
   type         = "A"
@@ -40,3 +40,12 @@ resource "google_dns_record_set" "search_engine_zone" {
 
   rrdatas = ["${google_compute_instance.gitlab.network_interface.0.access_config.0.nat_ip}"]
 }
+
+# resource "google_dns_record_set" "registry_name" {
+#   name         = "registry.${var.search_engine_dns_zone}."
+#   managed_zone = "${replace(var.search_engine_dns_zone,".", "-")}"
+#   type         = "A"
+#   ttl          = 30
+
+#   rrdatas = ["${google_compute_instance.gitlab.network_interface.0.access_config.0.nat_ip}"]
+# }

@@ -1,2 +1,23 @@
-gitlab_redirect_http_to_https: "false"
+gitlab_token: P7ShcHWhT1zLeW83f6hr # access_token
+initial_gitlab_user: root # don't change
+initial_gitlab_password: otus2222 # root password
+runner_amount: 3
 gitlab_time_zone: "St. Petersburg"
+gitlab_group_name: "search-engine"
+rmq_user: user123
+rmq_password: password123
+
+runner_shared_token: fT3Hk1ASMyyMXatbH3Gp # don't change
+gitlab_fqdn: "gitlab.{{ dns_zone }}"
+registry_fqdn: "gitlab.{{ dns_zone }}:8079"
+letsencrypt_enabled: "true"
+letsencrypt_auto_renew_hour: "12"
+letsencrypt_auto_renew_minute: "30"
+letsencrypt_auto_renew_day_of_month: "*/7"
+gitlab_https_enabled: "true"
+http_protocol: "https://"
+gitlab_external_url: "{{ http_protocol }}{{ gitlab_fqdn }}"
+gitlab_redirect_http_to_https: "true"
+registry_redirect_http_to_https: "true"
+gitlab_registry_enabled: "true"
+registry_external_url: "{{ http_protocol }}{{ registry_fqdn }}"

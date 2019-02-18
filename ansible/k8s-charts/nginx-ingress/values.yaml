@@ -83,7 +83,7 @@ controller:
 
   ## DaemonSet or Deployment
   ##
-  kind: Deployment
+  kind: DaemonSet
 
   # The update strategy to apply to the Deployment or DaemonSet
   ##
@@ -133,7 +133,9 @@ controller:
 
   ## Annotations to be added to controller pods
   ##
-  podAnnotations: {}
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
 
   replicaCount: 1
 
@@ -238,7 +240,7 @@ controller:
 
 
   stats:
-    enabled: false
+    enabled: true
 
     service:
       annotations: {}
@@ -257,12 +259,12 @@ controller:
   ## If controller.stats.enabled = true and controller.metrics.enabled = true, Prometheus metrics will be exported
   ##
   metrics:
-    enabled: false
+    enabled: true
 
     service:
-      annotations: {}
-      # prometheus.io/scrape: "true"
-      # prometheus.io/port: "10254"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "10254"
 
       clusterIP: ""
 

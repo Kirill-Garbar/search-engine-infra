@@ -1,8 +1,6 @@
 env: stage
-dns_zone: otus.garbar.pro
-gitlab_external_url: "http://gitlab.{{ dns_zone }}"
-docker_registry_user: kirillgarbar
-docker_registry_password:
-gitlab_token: 1EepHCqHDLrrdftdvzJ7
-runner_group_token: gxKPBdr4FD9qhdDB7swR
-runner_amount: 3
+dns_zone: otus4.garbar.pro
+kubernetes_cluster_name: standard-cluster-1
+credentials_file: ~/gce_creds/docker-000000-c88b83dd8e32.json # path to creds file from GCP service account
+service_account_email: gce-py-service-account@docker-000000.iam.gserviceaccount.com # email of GCP service account
+project_id: docker-000000 # GCP project id

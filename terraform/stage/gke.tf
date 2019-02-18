@@ -63,14 +63,16 @@ resource "google_container_node_pool" "bigpool" {
 }
 
 
-resource "google_compute_firewall" "kubernetes_firewall_rule" {
-  name    = "allow-kubernetes-apps"
-  network = "default"
 
-  allow {
-    protocol = "tcp"
-    ports    = ["30000-32767"]
-  }
 
-  source_ranges = ["0.0.0.0/0"]
-}
+# resource "google_compute_firewall" "kubernetes_firewall_rule" {
+#   name    = "allow-kubernetes-apps"
+#   network = "default"
+
+#   allow {
+#     protocol = "tcp"
+#     ports    = ["30000-32767"]
+#   }
+
+#   source_ranges = ["0.0.0.0/0"]
+# }

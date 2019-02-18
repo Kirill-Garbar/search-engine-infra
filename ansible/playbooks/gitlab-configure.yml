@@ -8,23 +8,80 @@
     base_url: "{{ gitlab_external_url }}/api/v4"
 
   tasks:
+    - name: Add host group
+      group_by:
+        key: tag_gitlab-server
+      tags:
+        - create-groups-and-projects
+        - gitlab-configure
+        - runners-install
+        - create-vars
+        - create-trigger
+
     - name: Create the Gitlab Group
       uri:
         url: "{{ base_url }}/groups"
         method: POST
         body_format: form-urlencoded
         body:
-          name: "{{ docker_registry_user }}"
-          path: "{{ docker_registry_user }}"
+          name: "{{ gitlab_group_name }}"
+          path: "{{ gitlab_group_name }}"
           visibility: public
         status_code: 201
         headers:
           PRIVATE-TOKEN: "{{ gitlab_token }}"
       ignore_errors: True
+      tags:
+         - create-groups-and-projects
+         - gitlab-configure
+      register: group_namespace_id
 
-    - name: Create the variable CI_REGISTRY_USER for the Group
+    - name: Create projects in the Group
       uri:
-        url: "{{ base_url }}/groups/{{ docker_registry_user }}/variables"
+        url: "{{ base_url }}/projects"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          name: "{{ project_item.project_name }}"
+          path: "{{ project_item.project_name }}"
+          namespace_id: "{{ group_namespace_id.json.id }}"
+          default_branch: master
+          visibility: public
+          import_url: "https://github.com/Kirill-Garbar/{{ gitlab_group_name }}-{{ project_item.project_name }}.git"
+        status_code: 201
+        headers:
+          PRIVATE-TOKEN: "{{ gitlab_token }}"
+      ignore_errors: True
+      loop:
+        - { project_name: 'ui' }
+        - { project_name: 'crawler' }
+        - { project_name: 'deploy' }
+      loop_control:
+        loop_var: project_item
+      tags:
+         - create-groups-and-projects
+         - gitlab-configure
+
+    - name: Create pipeline trigger
+      uri:
+        url: "{{ base_url }}/projects/{{ gitlab_group_name }}%2Fdeploy/triggers"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          id: deploy_trigger
+          description: deploy trigger
+        status_code: 201
+        headers:
+          PRIVATE-TOKEN: "{{ gitlab_token }}"
+      ignore_errors: True
+      register: trigger_ans
+      tags:
+         - create-trigger
+         - gitlab-configure
+
+    - name: Create variables
+      uri:
+        url: "{{ base_url }}/groups/{{ gitlab_group_name }}/variables"
         method: POST
         body_format: form-urlencoded
         body:
@@ -36,31 +93,31 @@
           PRIVATE-TOKEN: "{{ gitlab_token }}"
       ignore_errors: True
       loop:
-        - { name: 'CI_REGISTRY_USER', value: "{{ docker_registry_user }}" }
-        - { name: 'CI_REGISTRY_PASSWORD', value: "{{ docker_registry_password }}" }
-        - { name: 'CI_DNS_ZONE', value: "{{ dns_zone }}"}
+        - { name: 'CI_REGISTRY', value: "{{ registry_fqdn }}" }
+        - { name: 'CI_REGISTRY_USER', value: "{{ initial_gitlab_user }}" }
+        - { name: 'CI_REGISTRY_PASSWORD', value: "{{ initial_gitlab_password }}" }
+        - { name: 'HTTP_HTTPS', value: "{{ http_protocol }}"}
+        - { name: 'CI_GITLAB_FQDN', value: "{{ gitlab_fqdn }}" }
+        - { name: 'CI_DNS_ZONE', value: "{{ dns_zone }}" }
+        - { name: 'CI_SEARCH_ENGINE_DEPLOY_TOKEN', value: "{{ trigger_ans.json.token }}" }
+        - { name: 'CI_RMQ_USER', value: "{{ rmq_user }}" }
+        - { name: 'CI_RMQ_PASSWORD', value: "{{ rmq_password }}" }
       loop_control:
         loop_var: var_item
+      tags:
+         - create-vars
+         - gitlab-configure
 
-    - name: Create the project CRAWLER in the Group
-      uri:
-        url: "{{ base_url }}/projects"
-        method: POST
-        body_format: form-urlencoded
-        body:
-          name: "{{ project_item.project_name }}"
-          namespace_id: 2
-          path: "{{ project_item.project_name }}"
-          default_branch: master
-          visibility: public
-          import_url: "https://github.com/Kirill-Garbar/{{ project_item.project_name }}.git"
-        status_code: 201
-        headers:
-          PRIVATE-TOKEN: "{{ gitlab_token }}"
-      ignore_errors: True
-      loop:
-        - { project_name: 'search-engine-ui' }
-        - { project_name: 'search-engine-crawler' }
-        - { project_name: 'search-engine-deploy' }
+    - name: Provision infra gitlab-runners
+      shell:
+        helm upgrade --wait "gitlab-runner-{{ runner_number }}" ./gitlab-runner --install \
+        --set "gitlabUrl={{ gitlab_external_url }}" \
+        --set "runnerRegistrationToken={{ runner_shared_token }}"
+      args:
+        chdir: ../k8s-charts
+      loop: "{{ range(1, runner_amount + 1, 1)|list }}"
       loop_control:
-        loop_var: project_item
+        loop_var: runner_number
+      tags:
+         - runners-install
+         - gitlab-configure

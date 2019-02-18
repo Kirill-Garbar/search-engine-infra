@@ -1,17 +1,17 @@
 # general vars
-project = "docker-000000"
-public_key_path = "~/.ssh/appuser.pub"
-private_key_path = "~/.ssh/appuser"
+project = "docker-000000" # Project name
+public_key_path = "~/.ssh/appuser.pub" # Path o public ssh key
+private_key_path = "~/.ssh/appuser" # Path to private ssh keey
 region = "europe-west1"
 zone = "europe-west1-b"
-search_engine_dns_zone = "otus.garbar.pro"
+search_engine_dns_zone = "otus4.garbar.pro" # DNS zone for project
 
 # k8s vars
-cluster_name = "standard-cluster-1"
-cluster_min_ver = "1.10.11-gke.1"
-initial_workers_count = "1"
-initial_workers_mach_type = "n1-standard-2"
-initial_workers_disk_size = "20"
+cluster_name = "standard-cluster-1" # Changing this paramater will destroy your cluster
+cluster_min_ver = "1.11.6-gke.2" # Changing this paramater will destroy your cluster
+initial_workers_count = "1" # Changing this paramater will destroy your cluster
+initial_workers_mach_type = "n1-standard-2" # Changing this paramater will destroy your cluster
+initial_workers_disk_size = "20" # Changing this paramater will destroy your cluster
 workers_count = "2"
 workers_mach_type = "n1-standard-2"
 workers_disk_size = "30"

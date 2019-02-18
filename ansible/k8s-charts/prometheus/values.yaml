@@ -1299,15 +1299,26 @@ serverFiles:
             replacement: $1:$2
             target_label: __address__
 
-      - job_name: 'search-engine-production'
+      - job_name: 'ingress-controller-endpoints'
         kubernetes_sd_configs:
           - role: endpoints
         relabel_configs:
+          - source_labels: [__meta_kubernetes_service_label_app]
+            action: keep
+            regex: nginx-ingress
+          - source_labels: [__meta_kubernetes_service_label_component]
+            action: keep
+            regex: controller
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_port]
+            action: keep
+            regex: \d+
           - action: labelmap
             regex: __meta_kubernetes_service_label_(.+)
-          - source_labels: [__meta_kubernetes_service_label_app, __meta_kubernetes_namespace]
-            action: keep
-            regex: searchengine;(production|staging)+
+          - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
 
 # adds additional scrape configs to prometheus.yml
 # must be a string so you have to add a | after extraScrapeConfigs:

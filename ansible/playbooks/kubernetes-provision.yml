@@ -5,44 +5,57 @@
   gather_facts: no
 
   tasks:
-    - name: Provision infra task1
+    - name: Provision infra tiller
       shell: |
-        gcloud container clusters get-credentials standard-cluster-1 --zone europe-west1-b --project docker-223709
+        gcloud container clusters get-credentials {{ kubernetes_cluster_name }}
         kubectl apply -f tiller-role/manifest.yml
-        # kubectl apply -f gitlab-role/manifest.yml
+        helm init --wait --service-account tiller
       args:
         chdir: ../k8s-manifests
+      tags:
+         - tiller-install
+         - infra-provision
 
-    - name: Provision infra task2
+    - name: Provision infra prometheus
       shell: |
-        helm init --wait --service-account tiller
-        helm upgrade --wait prometheus ./prometheus --install
+        helm upgrade --wait prometheus ./prometheus --install \
+        --set "server.ingress.hosts={prometheus.{{ dns_zone }}}"
       args:
         chdir: ../k8s-charts
+      tags:
+         - prometheus-install
+         - infra-provision
 
-    - name: Provision infra task3
+    - name: Provision infra EFK
       shell: |
-        helm upgrade --wait grafana ./grafana -f ./grafana/custom_values.yaml --install
+        helm dep update efk
+        helm upgrade --wait efk efk --install \
+        --set "kibana.ingress.hosts={kibana.{{ dns_zone }}}" \
+        --set "kibana.env.ELASTICSEARCH_URL=http://efk-elasticsearch:9200"
       args:
         chdir: ../k8s-charts
+      tags:
+         - efk-install
+         - infra-provision
 
-
-    - name: Provision infra task4
-      shell:
-        helm upgrade --wait "gitlab-runner-{{ runner_number }}" ./gitlab-runner --install \
-        --set "gitlabUrl=http://gitlab.{{ dns_zone }}" \
-        --set "runnerRegistrationToken={{ runner_group_token }}"
+    - name: Provision infra grafana
+      shell: |
+        helm upgrade --wait grafana ./grafana --install \
+        --set "ingress.hosts={grafana.{{ dns_zone }}}"
       args:
         chdir: ../k8s-charts
-      loop: "{{ range(1, runner_amount + 1, 1)|list }}"
-      loop_control:
-        loop_var: runner_number
+      tags:
+         - grafana-install
+         - infra-provision
 
-    - name: Provision infra task5
+    - name: Provision infra nginx-ingress
       shell:
         helm upgrade --wait nginx ./nginx-ingress --install
       args:
         chdir: ../k8s-charts
+      tags:
+         - nginx-install
+         - infra-provision
 
     - name: Get ingress-controller info
       k8s_facts:
@@ -53,27 +66,37 @@
           - app=nginx-ingress
           - component=controller
       register: nginx_ingress_info
+      tags:
+         - dns-add
+         - infra-provision
 
     - name: Get ingress-controller external ip
       set_fact:
         nginx_ingress_ip: "{{ nginx_ingress_info.resources[0].status.loadBalancer.ingress[0].ip }}"
+      tags:
+         - dns-add
+         - infra-provision
 
     - name: add records
       gcdns_record:
-        credentials_file: "~/gce_creds/GOOGLE_JSON"
-        service_account_email: "gce-py-service-account@docker-223709.iam.gserviceaccount.com"
-        project_id: "docker-223709"
-        record: "{{ dns_item.record }}.{{ dns_zone }}"
+        credentials_file: "{{ credentials_file }}"
+        service_account_email: "{{ service_account_email }}"
+        project_id: "{{ project_id }}"
+        record: "{{ dns_item.record }}{{ dns_zone }}"
         zone: "{{ dns_zone }}"
         type: A
+        ttl: 30
         overwrite: true
         value: "{{ dns_item.value }}"
       loop:
-        - { record: 'prometheus', value: "{{ nginx_ingress_ip }}" }
-        - { record: 'grafana', value: "{{ nginx_ingress_ip }}" }
-        - { record: 'kibana', value: "{{ nginx_ingress_ip }}" }
-        - { record: 'search-engine-production', value: "{{ nginx_ingress_ip }}" }
-        - { record: 'search-engine-staging', value: "{{ nginx_ingress_ip }}" }
-        - { record: '*', value: "{{ nginx_ingress_ip }}" }
+        - { record: 'prometheus.', value: "{{ nginx_ingress_ip }}" }
+        - { record: 'grafana.', value: "{{ nginx_ingress_ip }}" }
+        - { record: 'kibana.', value: "{{ nginx_ingress_ip }}" }
+        - { record: 'search-engine-staging.', value: "{{ nginx_ingress_ip }}" }
+        - { record: '*.', value: "{{ nginx_ingress_ip }}" }
+        - { record: '', value: "{{ nginx_ingress_ip }}" }
       loop_control:
         loop_var: dns_item
+      tags:
+         - dns-add
+         - infra-provision

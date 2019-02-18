@@ -37,5 +37,5 @@ create_docker_host.sh
 .make_vars
 
 # k8s
-requirements.lock
-kubernetes/charts/**/charts/*.tgz
+**/k8s-charts/**/requirements.lock
+**/k8s-charts/**/charts/*.tgz
