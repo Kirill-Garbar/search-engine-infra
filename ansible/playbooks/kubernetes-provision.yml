@@ -1,0 +1,79 @@
+---
+- name: Provision infra pods and dns records
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Provision infra task1
+      shell: |
+        gcloud container clusters get-credentials standard-cluster-1 --zone europe-west1-b --project docker-223709
+        kubectl apply -f tiller-role/manifest.yml
+        # kubectl apply -f gitlab-role/manifest.yml
+      args:
+        chdir: ../k8s-manifests
+
+    - name: Provision infra task2
+      shell: |
+        helm init --wait --service-account tiller
+        helm upgrade --wait prometheus ./prometheus --install
+      args:
+        chdir: ../k8s-charts
+
+    - name: Provision infra task3
+      shell: |
+        helm upgrade --wait grafana ./grafana -f ./grafana/custom_values.yaml --install
+      args:
+        chdir: ../k8s-charts
+
+
+    - name: Provision infra task4
+      shell:
+        helm upgrade --wait "gitlab-runner-{{ runner_number }}" ./gitlab-runner --install \
+        --set "gitlabUrl=http://gitlab.{{ dns_zone }}" \
+        --set "runnerRegistrationToken={{ runner_group_token }}"
+      args:
+        chdir: ../k8s-charts
+      loop: "{{ range(1, runner_amount + 1, 1)|list }}"
+      loop_control:
+        loop_var: runner_number
+
+    - name: Provision infra task5
+      shell:
+        helm upgrade --wait nginx ./nginx-ingress --install
+      args:
+        chdir: ../k8s-charts
+
+    - name: Get ingress-controller info
+      k8s_facts:
+        api_version: v1
+        kind: Service
+        namespace: default
+        label_selectors:
+          - app=nginx-ingress
+          - component=controller
+      register: nginx_ingress_info
+
+    - name: Get ingress-controller external ip
+      set_fact:
+        nginx_ingress_ip: "{{ nginx_ingress_info.resources[0].status.loadBalancer.ingress[0].ip }}"
+
+    - name: add records
+      gcdns_record:
+        credentials_file: "~/gce_creds/GOOGLE_JSON"
+        service_account_email: "gce-py-service-account@docker-223709.iam.gserviceaccount.com"
+        project_id: "docker-223709"
+        record: "{{ dns_item.record }}.{{ dns_zone }}"
+        zone: "{{ dns_zone }}"
+        type: A
+        overwrite: true
+        value: "{{ dns_item.value }}"
+      loop:
+        - { record: 'prometheus', value: "{{ nginx_ingress_ip }}" }
+        - { record: 'grafana', value: "{{ nginx_ingress_ip }}" }
+        - { record: 'kibana', value: "{{ nginx_ingress_ip }}" }
+        - { record: 'search-engine-production', value: "{{ nginx_ingress_ip }}" }
+        - { record: 'search-engine-staging', value: "{{ nginx_ingress_ip }}" }
+        - { record: '*', value: "{{ nginx_ingress_ip }}" }
+      loop_control:
+        loop_var: dns_item

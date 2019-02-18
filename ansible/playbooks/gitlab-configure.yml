@@ -1,0 +1,66 @@
+---
+- name: gitlab configure
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    base_url: "{{ gitlab_external_url }}/api/v4"
+
+  tasks:
+    - name: Create the Gitlab Group
+      uri:
+        url: "{{ base_url }}/groups"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          name: "{{ docker_registry_user }}"
+          path: "{{ docker_registry_user }}"
+          visibility: public
+        status_code: 201
+        headers:
+          PRIVATE-TOKEN: "{{ gitlab_token }}"
+      ignore_errors: True
+
+    - name: Create the variable CI_REGISTRY_USER for the Group
+      uri:
+        url: "{{ base_url }}/groups/{{ docker_registry_user }}/variables"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          protected: "false"
+          key: "{{ var_item.name }}"
+          value: "{{ var_item.value }}"
+        status_code: 201
+        headers:
+          PRIVATE-TOKEN: "{{ gitlab_token }}"
+      ignore_errors: True
+      loop:
+        - { name: 'CI_REGISTRY_USER', value: "{{ docker_registry_user }}" }
+        - { name: 'CI_REGISTRY_PASSWORD', value: "{{ docker_registry_password }}" }
+        - { name: 'CI_DNS_ZONE', value: "{{ dns_zone }}"}
+      loop_control:
+        loop_var: var_item
+
+    - name: Create the project CRAWLER in the Group
+      uri:
+        url: "{{ base_url }}/projects"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          name: "{{ project_item.project_name }}"
+          namespace_id: 2
+          path: "{{ project_item.project_name }}"
+          default_branch: master
+          visibility: public
+          import_url: "https://github.com/Kirill-Garbar/{{ project_item.project_name }}.git"
+        status_code: 201
+        headers:
+          PRIVATE-TOKEN: "{{ gitlab_token }}"
+      ignore_errors: True
+      loop:
+        - { project_name: 'search-engine-ui' }
+        - { project_name: 'search-engine-crawler' }
+        - { project_name: 'search-engine-deploy' }
+      loop_control:
+        loop_var: project_item

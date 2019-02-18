@@ -1,0 +1,8 @@
+env: stage
+dns_zone: otus.garbar.pro
+gitlab_external_url: "http://gitlab.{{ dns_zone }}"
+docker_registry_user: kirillgarbar
+docker_registry_password:
+gitlab_token: 1EepHCqHDLrrdftdvzJ7
+runner_group_token: gxKPBdr4FD9qhdDB7swR
+runner_amount: 3

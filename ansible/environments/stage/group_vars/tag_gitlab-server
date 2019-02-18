@@ -1,0 +1,2 @@
+gitlab_redirect_http_to_https: "false"
+gitlab_time_zone: "St. Petersburg"

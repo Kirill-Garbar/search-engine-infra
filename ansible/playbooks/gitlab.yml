@@ -1,0 +1,3 @@
+- import_playbook: python-install.yml
+- import_playbook: gitlab-install.yml
+# - import_playbook: gitlab-configure.yml

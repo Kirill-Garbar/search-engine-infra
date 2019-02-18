@@ -1,0 +1,7 @@
+---
+- name: Install gitlab
+  hosts: tag_gitlab-server
+  become: true
+
+  roles:
+    - role: geerlingguy.gitlab
